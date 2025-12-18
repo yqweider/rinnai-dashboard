@@ -1,0 +1,209 @@
+# ============================================================
+# HOME ASSISTANT CONFIGURATION FOR RINNAI RU199iN DASHBOARD
+# ============================================================
+# Add these to your configuration.yaml
+
+# Template Sensors for Enhanced Monitoring
+template:
+  - binary_sensor:
+      # Enhanced pump status sensor that verifies actual water flow
+      - name: "Rinnai Pump Actually Running"
+        unique_id: rinnai_pump_actually_running
+        state: >
+          {{ states('binary_sensor.rinnai_recirculation') == 'on' 
+             and states('sensor.rinnai_water_flow_rate')|float(0) > 0.1 }}
+        device_class: running
+        icon: mdi:pump
+        attributes:
+          last_verified: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+          
+      # Smart system status combining multiple indicators
+      - name: "Rinnai System Active"
+        unique_id: rinnai_system_active
+        state: >
+          {{ states('binary_sensor.rinnai_heating') == 'on' 
+             or states('binary_sensor.rinnai_recirculation') == 'on' }}
+        device_class: running
+        icon: >
+          {% if states('binary_sensor.rinnai_heating') == 'on' %}
+            mdi:fire
+          {% elif states('binary_sensor.rinnai_recirculation') == 'on' %}
+            mdi:water-pump
+          {% else %}
+            mdi:power-sleep
+          {% endif %}
+          
+  - sensor:
+      # Temperature differential to show heating efficiency
+      - name: "Rinnai Temperature Rise"
+        unique_id: rinnai_temperature_rise
+        unit_of_measurement: "°F"
+        state: >
+          {{ (states('sensor.rinnai_outlet_temperature')|float(0) - 
+              states('sensor.rinnai_inlet_temperature')|float(0)) | round(1) }}
+        icon: mdi:thermometer-chevron-up
+        attributes:
+          efficiency: >
+            {% set rise = (states('sensor.rinnai_outlet_temperature')|float(0) - 
+                          states('sensor.rinnai_inlet_temperature')|float(0)) %}
+            {% if rise > 50 %}
+              Excellent
+            {% elif rise > 30 %}
+              Good
+            {% elif rise > 15 %}
+              Fair
+            {% else %}
+              Poor
+            {% endif %}
+      
+      # Pump efficiency metric
+      - name: "Rinnai Pump Efficiency"
+        unique_id: rinnai_pump_efficiency
+        unit_of_measurement: "cycles/hour"
+        state: >
+          {% set hours = states('sensor.rinnai_pump_hours')|float(1) %}
+          {% set cycles = states('sensor.rinnai_pump_cycles')|float(0) %}
+          {{ (cycles / hours) | round(1) }}
+        icon: mdi:chart-line
+        
+      # Energy usage estimate based on heating activity
+      - name: "Rinnai Daily Heating Time"
+        unique_id: rinnai_daily_heating_time
+        unit_of_measurement: "h"
+        state: >
+          {{ states('sensor.rinnai_operation_hours')|float(0) }}
+        icon: mdi:clock-outline
+        
+      # Status summary for quick overview
+      - name: "Rinnai Status Summary"
+        unique_id: rinnai_status_summary
+        state: >
+          {% if states('binary_sensor.rinnai_heating') == 'on' %}
+            Heating - {{ states('sensor.rinnai_outlet_temperature') }}°F
+          {% elif states('binary_sensor.rinnai_pump_actually_running') == 'on' %}
+            Circulating - {{ states('sensor.rinnai_water_flow_rate') }} GPM
+          {% elif states('binary_sensor.rinnai_recirculation') == 'on' %}
+            Circulation Active
+          {% else %}
+            Standby - {{ states('sensor.rinnai_outlet_temperature') }}°F
+          {% endif %}
+        icon: mdi:water-boiler
+        attributes:
+          outlet_temp: "{{ states('sensor.rinnai_outlet_temperature') }}"
+          inlet_temp: "{{ states('sensor.rinnai_inlet_temperature') }}"
+          flow_rate: "{{ states('sensor.rinnai_water_flow_rate') }}"
+          heating: "{{ states('binary_sensor.rinnai_heating') }}"
+          pump_running: "{{ states('binary_sensor.rinnai_pump_actually_running') }}"
+
+# ============================================================
+# CUSTOM CARD INTEGRATION
+# ============================================================
+
+# Method 1: Using custom:button-card (recommended for quick setup)
+# Install via HACS: https://github.com/custom-cards/button-card
+
+# Add this to your dashboard:
+# type: custom:button-card
+# entity: water_heater.rinnai_211300078wzd5_water_heater
+# name: Rinnai RU199iN
+# show_state: true
+# styles:
+#   card:
+#     - background: linear-gradient(135deg, rgba(46,196,182,0.1) 0%, rgba(255,107,53,0.1) 100%)
+#   name:
+#     - font-size: 24px
+#     - font-weight: bold
+
+# Method 2: Using the React component above
+# 1. Install custom:react-card via HACS or manually
+# 2. Copy the rinnai-dashboard-card.jsx to your www folder
+# 3. Add this to your dashboard:
+#
+# type: custom:react-card
+# source: /local/rinnai-dashboard-card.jsx
+# props:
+#   sensors:
+#     recirculationActive: binary_sensor.rinnai_recirculation
+#     pumpRunning: binary_sensor.rinnai_pump_actually_running
+#     heatingActive: binary_sensor.rinnai_heating
+#     outletTemp: sensor.rinnai_outlet_temperature
+#     inletTemp: sensor.rinnai_inlet_temperature
+#     flowRate: sensor.rinnai_water_flow_rate
+#     targetTemp: water_heater.rinnai_211300078wzd5_water_heater.temperature
+#     pumpCycles: sensor.rinnai_pump_cycles
+#     pumpHours: sensor.rinnai_pump_hours
+#     combustionCycles: sensor.rinnai_combustion_cycles
+#     operationHours: sensor.rinnai_operation_hours
+#     fanCurrent: sensor.rinnai_fan_current
+#     fanFrequency: sensor.rinnai_fan_frequency
+
+# ============================================================
+# NOTIFICATIONS & ALERTS (OPTIONAL)
+# ============================================================
+
+automation:
+  # Alert when pump fails to start
+  - alias: "Rinnai Pump Failure Alert"
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.rinnai_recirculation
+        to: "on"
+        for:
+          seconds: 30
+    condition:
+      - condition: state
+        entity_id: binary_sensor.rinnai_pump_actually_running
+        state: "off"
+    action:
+      - service: notify.notify
+        data:
+          title: "⚠️ Rinnai Water Heater Alert"
+          message: "Recirculation commanded but pump not running. Check system."
+          
+  # Alert on abnormal temperature
+  - alias: "Rinnai Temperature Anomaly"
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.rinnai_temperature_rise
+        below: 10
+        for:
+          minutes: 5
+    condition:
+      - condition: state
+        entity_id: binary_sensor.rinnai_heating
+        state: "on"
+    action:
+      - service: notify.notify
+        data:
+          title: "⚠️ Rinnai Heating Issue"
+          message: "Temperature rise is unusually low. System may not be heating properly."
+
+# ============================================================
+# SENSOR NAME MAPPING REFERENCE
+# ============================================================
+# Replace these entity IDs with your actual sensor names:
+#
+# Water Heater Entity:
+#   water_heater.rinnai_211300078wzd5_water_heater
+#
+# Binary Sensors:
+#   binary_sensor.rinnai_recirculation
+#   binary_sensor.rinnai_heating
+#
+# Temperature Sensors:
+#   sensor.rinnai_outlet_temperature
+#   sensor.rinnai_inlet_temperature
+#
+# Flow & Performance:
+#   sensor.rinnai_water_flow_rate
+#   sensor.rinnai_pump_cycles
+#   sensor.rinnai_pump_hours
+#   sensor.rinnai_combustion_cycles
+#   sensor.rinnai_operation_hours
+#
+# Fan Metrics:
+#   sensor.rinnai_fan_current
+#   sensor.rinnai_fan_frequency
+#
+# Switch:
+#   switch.rinnai_recirculation

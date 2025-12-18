@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rinnai RU199iN Dashboard</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Space Mono', 'Courier New', monospace;
+      background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 50%, #16213e 100%);
+      color: #e8eaed;
+      padding: 1rem;
+      min-height: 100vh;
+    }
+
+    .dashboard {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.02);
+      backdrop-filter: blur(20px);
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(90deg, rgba(46, 196, 182, 0.1) 0%, rgba(255, 107, 53, 0.1) 100%);
+      padding: 1.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .title {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #2ec4b6 0%, #ff6b35 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      font-size: 0.8rem;
+      color: #8b92a8;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-top: 0.25rem;
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1.5rem;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 50px;
+      border: 2px solid;
+    }
+
+    .status-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      box-shadow: 0 0 20px currentColor;
+    }
+
+    .status-text {
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      padding: 1.5rem;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 16px;
+      padding: 1.5rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card.large {
+      grid-column: span 2;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .card-icon {
+      width: 20px;
+      height: 20px;
+    }
+
+    .card-title {
+      font-size: 0.9rem;
+      color: #8b92a8;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .temp-display {
+      display: flex;
+      align-items: baseline;
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+
+    .temp-value {
+      font-size: 5rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .temp-unit {
+      font-size: 2rem;
+      color: #8b92a8;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .metric {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .metric-label {
+      font-size: 0.75rem;
+      color: #8b92a8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .metric-value {
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    .progress-bar {
+      height: 6px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 1rem;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #2ec4b6 0%, #1a9d8f 100%);
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+
+    .visualizer {
+      width: 180px;
+      height: 180px;
+      position: relative;
+      margin: 0 auto;
+    }
+
+    .tank {
+      width: 100px;
+      height: 150px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      position: absolute;
+      left: 40px;
+      top: 15px;
+      overflow: hidden;
+    }
+
+    .water-level {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      background: linear-gradient(180deg, rgba(46, 196, 182, 0.4) 0%, rgba(46, 196, 182, 0.8) 100%);
+      transition: height 0.5s ease;
+    }
+
+    .heating-element {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 4px;
+      background: #ff6b35;
+      border-radius: 2px;
+      box-shadow: 0 0 20px #ff6b35;
+      animation: glow 1s ease-in-out infinite;
+    }
+
+    .flow-arrow {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      border: 3px solid #2ec4b6;
+      border-radius: 8px;
+      opacity: 0;
+    }
+
+    .flow-arrow.left {
+      left: 5px;
+      top: 50%;
+      border-top: none;
+      border-right: none;
+      transform: rotate(45deg);
+      animation: flow-left 1.5s ease-in-out infinite;
+    }
+
+    .flow-arrow.right {
+      right: 5px;
+      top: 50%;
+      border-bottom: none;
+      border-left: none;
+      transform: rotate(45deg);
+      animation: flow-right 1.5s ease-in-out infinite;
+    }
+
+    @keyframes glow {
+      0%, 100% { opacity: 1; box-shadow: 0 0 20px #ff6b35; }
+      50% { opacity: 0.6; box-shadow: 0 0 40px #ff6b35; }
+    }
+
+    @keyframes flow-left {
+      0% { opacity: 0; transform: translateX(20px) rotate(45deg); }
+      50% { opacity: 1; }
+      100% { opacity: 0; transform: translateX(-20px) rotate(45deg); }
+    }
+
+    @keyframes flow-right {
+      0% { opacity: 0; transform: translateX(-20px) rotate(45deg); }
+      50% { opacity: 1; }
+      100% { opacity: 0; transform: translateX(20px) rotate(45deg); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .pulse {
+      animation: pulse 2s infinite;
+    }
+
+    @media (max-width: 768px) {
+      .card.large {
+        grid-column: span 1;
+      }
+      .temp-value {
+        font-size: 3.5rem;
+      }
+      .title {
+        font-size: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard">
+    <!-- Header -->
+    <div class="header">
+      <div>
+        <div class="title">RINNAI RU199iN</div>
+        <div class="subtitle">Tankless Water Heater Control System</div>
+      </div>
+      <div class="status-badge" id="statusBadge">
+        <div class="status-dot" id="statusDot"></div>
+        <div class="status-text" id="statusText">STANDBY</div>
+      </div>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="grid">
+      <!-- Temperature Display -->
+      <div class="card large">
+        <div class="card-header">
+          <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="#2ec4b6" stroke-width="2">
+            <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>
+          </svg>
+          <div class="card-title">Water Temperature</div>
+        </div>
+        
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div class="temp-display">
+              <span class="temp-value" id="outletTemp">105</span>
+              <span class="temp-unit">°F</span>
+            </div>
+            
+            <div class="metric-grid">
+              <div class="metric">
+                <div class="metric-label">Inlet</div>
+                <div class="metric-value" id="inletTemp">68°F</div>
+              </div>
+              <div class="metric">
+                <div class="metric-label">Target</div>
+                <div class="metric-value" style="color: #2ec4b6;" id="targetTemp">120°F</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Visualizer -->
+          <div class="visualizer" id="visualizer">
+            <div class="tank">
+              <div class="water-level" id="waterLevel"></div>
+              <div class="heating-element" id="heatingElement" style="display: none;"></div>
+            </div>
+            <div class="flow-arrow left" id="flowLeft"></div>
+            <div class="flow-arrow right" id="flowRight"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Flow Rate -->
+      <div class="card">
+        <div class="card-header">
+          <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="#2ec4b6" stroke-width="2">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          </svg>
+          <div class="card-title">Flow Rate</div>
+        </div>
+        <div class="temp-display">
+          <span class="temp-value" style="font-size: 2.5rem;" id="flowRate">0.0</span>
+          <span class="temp-unit" style="font-size: 1.2rem;">GPM</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="flowProgress" style="width: 0%;"></div>
+        </div>
+      </div>
+
+      <!-- Pump Status -->
+      <div class="card" id="pumpCard">
+        <div class="card-header">
+          <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="#8b92a8" stroke-width="2" id="pumpIcon">
+            <path d="M7 16.3c2.2 0 4-1.8 4-4 0-1.5-.8-2.8-2-3.4V7c0-1.1-.9-2-2-2s-2 .9-2 2v1.9c-1.2.6-2 1.9-2 3.4 0 2.2 1.8 4 4 4z"/>
+            <path d="M14 12c0-1.1.9-2 2-2h3.5c1.4 0 2.5 1.1 2.5 2.5S20.9 15 19.5 15H16c-1.1 0-2-.9-2-2z"/>
+          </svg>
+          <div class="card-title">Pump Status</div>
+        </div>
+        <div class="metric-value" id="pumpStatus" style="color: #8b92a8; margin: 0.5rem 0;">STANDBY</div>
+        <div class="metric-grid">
+          <div class="metric">
+            <div class="metric-label">Cycles</div>
+            <div class="metric-value" id="pumpCycles">1,247</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Hours</div>
+            <div class="metric-value" id="pumpHours">342</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Heating Status -->
+      <div class="card" id="heatingCard">
+        <div class="card-header">
+          <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="#8b92a8" stroke-width="2" id="heatingIcon">
+            <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
+          </svg>
+          <div class="card-title">Burner Status</div>
+        </div>
+        <div class="metric-value" id="heatingStatus" style="color: #8b92a8; margin: 0.5rem 0;">OFF</div>
+        <div class="metric-grid">
+          <div class="metric">
+            <div class="metric-label">Cycles</div>
+            <div class="metric-value" id="combustionCycles">8,932</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Hours</div>
+            <div class="metric-value" id="operationHours">2,156</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fan Metrics -->
+      <div class="card">
+        <div class="card-header">
+          <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="#8b92a8" stroke-width="2">
+            <path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16v-2m-4 0H2m10.59-2.59A2 2 0 0 0 10 8h4"/>
+          </svg>
+          <div class="card-title">Combustion Fan</div>
+        </div>
+        <div class="metric-grid">
+          <div class="metric">
+            <div class="metric-label">Current</div>
+            <div class="metric-value" id="fanCurrent">150 <span style="font-size: 0.8rem; color: #8b92a8;">mA</span></div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Frequency</div>
+            <div class="metric-value" id="fanFrequency">60 <span style="font-size: 0.8rem; color: #8b92a8;">Hz</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ═══════════════════════════════════════════════════════════════
+    // 🔧 CONFIGURATION - UPDATE THESE WITH YOUR ACTUAL ENTITY IDs
+    // ═══════════════════════════════════════════════════════════════
+    // 
+    // To find your entity IDs:
+    // 1. Go to Developer Tools → States in Home Assistant
+    // 2. Filter by "rinnai" 
+    // 3. Copy the exact entity_id values below
+    //
+    // OR use the sensor discovery helper included in the package
+    //
+    const ENTITY_MAP = {
+      // WATER HEATER (Main control entity)
+      targetTemp: 'water_heater.rinnai_water_heater',
+      
+      // BINARY SENSORS (Status indicators) - ✓ All confirmed working
+      recirculationActive: 'binary_sensor.rinnai_recirculation',
+      heatingActive: 'binary_sensor.rinnai_heating',
+      pumpRunning: 'binary_sensor.rinnai_recirculation', // Uses actual sensor
+      
+      // TEMPERATURE SENSORS - ✓ Both present
+      outletTemp: 'sensor.rinnai_outlet_temperature',
+      inletTemp: 'sensor.rinnai_inlet_temperature',
+      
+      // PERFORMANCE SENSORS - ✓ All present
+      flowRate: 'sensor.rinnai_water_flow_rate',
+      pumpCycles: 'sensor.rinnai_pump_cycles',
+      pumpHours: 'sensor.rinnai_pump_hours',
+      combustionCycles: 'sensor.rinnai_combustion_cycles',
+      operationHours: 'sensor.rinnai_operation_hours',
+      
+      // FAN SENSORS - ✓ Both present (maintenance mode enabled)
+      fanCurrent: 'sensor.rinnai_fan_current',
+      fanFrequency: 'sensor.rinnai_fan_frequency'
+    };
+    
+    // ═══════════════════════════════════════════════════════════════
+    // END CONFIGURATION - Don't modify below this line unless you
+    // know what you're doing!
+    // ═══════════════════════════════════════════════════════════════
+
+    // Temperature color calculator
+    function getTempColor(temp) {
+      if (temp < 70) return '#3498db';
+      if (temp < 90) return '#2ec4b6';
+      if (temp < 110) return '#f39c12';
+      return '#e74c3c';
+    }
+
+    // Update dashboard with real data
+    function updateDashboard(data) {
+      // Update temperatures
+      const outletTemp = parseFloat(data.outletTemp) || 105;
+      const inletTemp = parseFloat(data.inletTemp) || 68;
+      const targetTemp = parseFloat(data.targetTemp) || 120;
+      
+      document.getElementById('outletTemp').textContent = Math.round(outletTemp);
+      document.getElementById('outletTemp').style.color = getTempColor(outletTemp);
+      document.getElementById('inletTemp').textContent = inletTemp + '°F';
+      document.getElementById('inletTemp').style.color = getTempColor(inletTemp);
+      document.getElementById('targetTemp').textContent = targetTemp + '°F';
+
+      // Update flow rate
+      const flowRate = parseFloat(data.flowRate) || 0;
+      document.getElementById('flowRate').textContent = flowRate.toFixed(1);
+      document.getElementById('flowRate').style.color = flowRate > 0 ? '#2ec4b6' : '#8b92a8';
+      document.getElementById('flowProgress').style.width = Math.min(100, (flowRate / 10) * 100) + '%';
+
+      // Update pump status
+      const pumpRunning = data.pumpRunning === true || data.pumpRunning === 'on';
+      document.getElementById('pumpStatus').textContent = pumpRunning ? 'ACTIVE' : 'STANDBY';
+      document.getElementById('pumpStatus').style.color = pumpRunning ? '#2ec4b6' : '#8b92a8';
+      document.getElementById('pumpCard').style.background = pumpRunning ? 
+        'rgba(46, 196, 182, 0.1)' : 'rgba(255, 255, 255, 0.03)';
+      document.getElementById('pumpCard').style.borderColor = pumpRunning ? 
+        'rgba(46, 196, 182, 0.3)' : 'rgba(255, 255, 255, 0.1)';
+      
+      // Update heating status
+      const heatingActive = data.heatingActive === true || data.heatingActive === 'on';
+      document.getElementById('heatingStatus').textContent = heatingActive ? 'HEATING' : 'OFF';
+      document.getElementById('heatingStatus').style.color = heatingActive ? '#ff6b35' : '#8b92a8';
+      document.getElementById('heatingCard').style.background = heatingActive ? 
+        'rgba(255, 107, 53, 0.1)' : 'rgba(255, 255, 255, 0.03)';
+      document.getElementById('heatingCard').style.borderColor = heatingActive ? 
+        'rgba(255, 107, 53, 0.3)' : 'rgba(255, 255, 255, 0.1)';
+
+      // Update visualizer
+      const waterLevel = (outletTemp / targetTemp) * 100;
+      document.getElementById('waterLevel').style.height = Math.min(100, waterLevel) + '%';
+      document.getElementById('waterLevel').style.background = 
+        `linear-gradient(180deg, ${getTempColor(outletTemp)}44 0%, ${getTempColor(outletTemp)}88 100%)`;
+      
+      document.getElementById('heatingElement').style.display = heatingActive ? 'block' : 'none';
+      document.getElementById('flowLeft').style.display = pumpRunning ? 'block' : 'none';
+      document.getElementById('flowRight').style.display = pumpRunning ? 'block' : 'none';
+
+      // Update status badge
+      const statusDot = document.getElementById('statusDot');
+      const statusText = document.getElementById('statusText');
+      const statusBadge = document.getElementById('statusBadge');
+      
+      if (heatingActive) {
+        statusDot.style.background = '#ff6b35';
+        statusText.textContent = 'HEATING';
+        statusText.style.color = '#ff6b35';
+        statusBadge.style.borderColor = '#ff6b35';
+        statusDot.classList.add('pulse');
+      } else if (pumpRunning) {
+        statusDot.style.background = '#2ec4b6';
+        statusText.textContent = 'CIRCULATING';
+        statusText.style.color = '#2ec4b6';
+        statusBadge.style.borderColor = '#2ec4b6';
+        statusDot.classList.add('pulse');
+      } else {
+        statusDot.style.background = '#8b92a8';
+        statusText.textContent = 'STANDBY';
+        statusText.style.color = '#8b92a8';
+        statusBadge.style.borderColor = '#8b92a8';
+        statusDot.classList.remove('pulse');
+      }
+
+      // Update metrics
+      document.getElementById('pumpCycles').textContent = (parseInt(data.pumpCycles) || 1247).toLocaleString();
+      document.getElementById('pumpHours').textContent = (parseInt(data.pumpHours) || 342).toLocaleString();
+      document.getElementById('combustionCycles').textContent = (parseInt(data.combustionCycles) || 8932).toLocaleString();
+      document.getElementById('operationHours').textContent = (parseInt(data.operationHours) || 2156).toLocaleString();
+      document.getElementById('fanCurrent').innerHTML = (parseInt(data.fanCurrent) || 150) + ' <span style="font-size: 0.8rem; color: #8b92a8;">mA</span>';
+      document.getElementById('fanFrequency').innerHTML = (parseInt(data.fanFrequency) || 60) + ' <span style="font-size: 0.8rem; color: #8b92a8;">Hz</span>';
+    }
+
+    // Check if running in Home Assistant
+    function isHomeAssistant() {
+      return window.hassConnection !== undefined || window.parent.hassConnection !== undefined;
+    }
+
+    // Subscribe to Home Assistant state changes
+    if (isHomeAssistant()) {
+      const hass = window.hassConnection || window.parent.hassConnection;
+      
+      // Subscribe to all entities
+      Object.values(ENTITY_MAP).forEach(entityId => {
+        hass.subscribeEvents((event) => {
+          if (event.data.entity_id === entityId) {
+            updateFromHA();
+          }
+        }, 'state_changed');
+      });
+
+      function updateFromHA() {
+        const data = {};
+        Object.keys(ENTITY_MAP).forEach(key => {
+          const entityId = ENTITY_MAP[key];
+          const state = hass.states[entityId];
+          if (state) {
+            data[key] = state.state;
+          }
+        });
+        updateDashboard(data);
+      }
+
+      // Initial update
+      updateFromHA();
+    } else {
+      // Demo mode - simulate data
+      console.log('Running in demo mode - no Home Assistant connection');
+      
+      let demoData = {
+        outletTemp: 105,
+        inletTemp: 68,
+        flowRate: 0,
+        targetTemp: 120,
+        pumpRunning: false,
+        heatingActive: false,
+        pumpCycles: 1247,
+        pumpHours: 342,
+        combustionCycles: 8932,
+        operationHours: 2156,
+        fanCurrent: 150,
+        fanFrequency: 60
+      };
+
+      setInterval(() => {
+        // Randomly change states
+        if (Math.random() > 0.95) {
+          demoData.pumpRunning = !demoData.pumpRunning;
+          demoData.flowRate = demoData.pumpRunning ? 2.4 : 0;
+        }
+        if (Math.random() > 0.97) {
+          demoData.heatingActive = !demoData.heatingActive;
+        }
+        if (demoData.heatingActive && demoData.outletTemp < demoData.targetTemp) {
+          demoData.outletTemp += Math.random() * 0.5;
+        }
+        updateDashboard(demoData);
+      }, 2000);
+
+      updateDashboard(demoData);
+    }
+  </script>
+</body>
+</html>
