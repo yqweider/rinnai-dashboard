@@ -14,6 +14,7 @@ A beautiful, animated dashboard for monitoring and controlling your Rinnai RU199
 - 🔄 **Circulation Status** - Live pump and recirculation monitoring
 - 🔥 **Heating Indicators** - Glowing animations when burner is active
 - 📊 **Performance Metrics** - Pump cycles, hours, combustion data, fan diagnostics
+- 🎮 **Interactive Controls** - Set temperature and control recirculation directly from dashboard
 - 📱 **Fully Responsive** - Works perfectly on desktop, tablet, and mobile
 - ⚡ **Zero Dependencies** - Pure HTML/CSS/JS, no external libraries required
 
@@ -85,8 +86,14 @@ If your entity names differ, edit `rinnai-dashboard.html` around line 310 to upd
 
 ### Step 2: Add to Dashboard
 
-Add this to your Home Assistant dashboard:
+**If installed via HACS:**
+```yaml
+type: iframe
+url: /local/community/rinnai-dashboard/rinnai-dashboard.html
+aspect_ratio: 60%
+```
 
+**If installed manually:**
 ```yaml
 type: iframe
 url: /local/rinnai-dashboard.html
@@ -155,9 +162,12 @@ const ENTITY_MAP = {
 - Wait 30 seconds for initial data load
 
 ### Dashboard not loading
-- Verify file is at `/config/www/rinnai-dashboard.html`
+- **HACS install:** Verify file is at `/config/www/community/rinnai-dashboard/rinnai-dashboard.html`
+- **Manual install:** Verify file is at `/config/www/rinnai-dashboard.html`
 - Clear browser cache (Ctrl+Shift+R)
-- Try accessing directly: `http://YOUR_HA_IP:8123/local/rinnai-dashboard.html`
+- Try accessing directly: 
+  - HACS: `http://YOUR_HA_IP:8123/local/community/rinnai-dashboard/rinnai-dashboard.html`
+  - Manual: `http://YOUR_HA_IP:8123/local/rinnai-dashboard.html`
 
 ### Sensors not updating
 - Enable "Maintenance Data" in Rinnai integration configuration

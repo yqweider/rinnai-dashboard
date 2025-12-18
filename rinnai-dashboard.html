@@ -422,9 +422,279 @@
         </div>
       </div>
     </div>
+
+    <!-- INTERACTIVE CONTROLS -->
+    <div style="padding: 2rem; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+      <h2 style="
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #e8eaed;
+        margin: 0 0 1.5rem 0;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      ">Controls</h2>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+        
+        <!-- Temperature Control -->
+        <div class="card" style="background: rgba(255, 255, 255, 0.05);">
+          <div class="card-header">
+            <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="#ff6b35" stroke-width="2">
+              <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>
+            </svg>
+            <div class="card-title">Set Temperature</div>
+          </div>
+          
+          <div style="display: flex; align-items: center; gap: 1rem; margin-top: 1rem;">
+            <button onclick="adjustTemperature(-1)" class="control-btn" style="background: rgba(46, 196, 182, 0.2); color: #2ec4b6;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+            </button>
+            
+            <div style="flex: 1; text-align: center;">
+              <div style="font-size: 2.5rem; font-weight: 700; color: #ff6b35;" id="targetTempDisplay">120</div>
+              <div style="font-size: 0.9rem; color: #8b92a8; margin-top: 0.25rem;">Target °F</div>
+            </div>
+            
+            <button onclick="adjustTemperature(1)" class="control-btn" style="background: rgba(255, 107, 53, 0.2); color: #ff6b35;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+            </button>
+          </div>
+          
+          <button onclick="setTemperature()" class="action-btn" style="margin-top: 1rem; background: linear-gradient(135deg, #ff6b35 0%, #e74c3c 100%);">
+            Apply Temperature
+          </button>
+        </div>
+
+        <!-- Recirculation Control -->
+        <div class="card" style="background: rgba(255, 255, 255, 0.05);">
+          <div class="card-header">
+            <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="#2ec4b6" stroke-width="2">
+              <path d="M7 16.3c2.2 0 4-1.8 4-4 0-1.5-.8-2.8-2-3.4V7c0-1.1-.9-2-2-2s-2 .9-2 2v1.9c-1.2.6-2 1.9-2 3.4 0 2.2 1.8 4 4 4z"/>
+              <path d="M14 12c0-1.1.9-2 2-2h3.5c1.4 0 2.5 1.1 2.5 2.5S20.9 15 19.5 15H16c-1.1 0-2-.9-2-2z"/>
+            </svg>
+            <div class="card-title">Recirculation</div>
+          </div>
+          
+          <div style="margin-top: 1rem;">
+            <label style="display: block; font-size: 0.9rem; color: #8b92a8; margin-bottom: 0.5rem;">
+              Duration (minutes)
+            </label>
+            <input 
+              type="number" 
+              id="recircDuration" 
+              value="15" 
+              min="5" 
+              max="60" 
+              style="
+                width: 100%;
+                padding: 0.75rem;
+                background: rgba(0, 0, 0, 0.3);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                border-radius: 8px;
+                color: #e8eaed;
+                font-size: 1.2rem;
+                font-family: inherit;
+                text-align: center;
+              "
+            />
+          </div>
+          
+          <button id="recircButton" onclick="toggleRecirculation()" class="action-btn" style="margin-top: 1rem; background: linear-gradient(135deg, #2ec4b6 0%, #1a9d8f 100%);">
+            Start Recirculation
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Status Messages -->
+      <div id="statusMessage" style="
+        margin-top: 1.5rem;
+        padding: 1rem;
+        border-radius: 8px;
+        text-align: center;
+        font-size: 0.9rem;
+        display: none;
+      "></div>
+    </div>
   </div>
 
+  <style>
+    .control-btn {
+      width: 50px;
+      height: 50px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      font-family: inherit;
+    }
+
+    .control-btn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .control-btn:active {
+      transform: scale(0.95);
+    }
+
+    .action-btn {
+      width: 100%;
+      padding: 1rem;
+      border: none;
+      border-radius: 12px;
+      color: #0f0f1e;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      font-family: inherit;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .action-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+    }
+
+    .action-btn:active {
+      transform: translateY(0);
+    }
+
+    .action-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+  </style>
+
   <script>
+    // ═══════════════════════════════════════════════════════════════
+    // 🎮 INTERACTIVE CONTROLS
+    // ═══════════════════════════════════════════════════════════════
+    
+    let currentTargetTemp = 120;
+
+    // Adjust temperature up or down
+    function adjustTemperature(delta) {
+      currentTargetTemp = Math.max(100, Math.min(140, currentTargetTemp + delta));
+      document.getElementById('targetTempDisplay').textContent = currentTargetTemp;
+    }
+
+    // Set water heater temperature
+    async function setTemperature() {
+      const btn = event.target;
+      btn.disabled = true;
+      btn.textContent = 'Setting...';
+
+      try {
+        if (isHomeAssistant()) {
+          const hass = getHass();
+          await hass.callService('water_heater', 'set_temperature', {
+            entity_id: ENTITY_MAP.targetTemp,
+            temperature: currentTargetTemp
+          });
+          showStatus('Temperature set to ' + currentTargetTemp + '°F', 'success');
+        } else {
+          showStatus('Demo mode - would set temperature to ' + currentTargetTemp + '°F', 'info');
+        }
+      } catch (error) {
+        showStatus('Error setting temperature: ' + error.message, 'error');
+      }
+
+      btn.disabled = false;
+      btn.textContent = 'Apply Temperature';
+    }
+
+    // Toggle recirculation
+    async function toggleRecirculation() {
+      const btn = document.getElementById('recircButton');
+      const duration = parseInt(document.getElementById('recircDuration').value);
+      const isRunning = sensors.recirculationActive;
+
+      btn.disabled = true;
+
+      try {
+        if (isHomeAssistant()) {
+          const hass = getHass();
+          if (isRunning) {
+            // Stop recirculation
+            await hass.callService('switch', 'turn_off', {
+              entity_id: 'switch.rinnai_recirculation'
+            });
+            showStatus('Recirculation stopped', 'success');
+          } else {
+            // Start recirculation with duration
+            await hass.callService('rinnai', 'start_recirculation', {
+              entity_id: ENTITY_MAP.targetTemp,
+              recirculation_minutes: duration
+            });
+            showStatus('Recirculation started for ' + duration + ' minutes', 'success');
+          }
+        } else {
+          // Demo mode
+          sensors.pumpRunning = !sensors.pumpRunning;
+          sensors.recirculationActive = !sensors.recirculationActive;
+          sensors.flowRate = sensors.pumpRunning ? 2.4 : 0;
+          updateDashboard(sensors);
+          showStatus('Demo: Recirculation ' + (sensors.pumpRunning ? 'started' : 'stopped'), 'info');
+        }
+      } catch (error) {
+        showStatus('Error: ' + error.message, 'error');
+      }
+
+      btn.disabled = false;
+      updateRecircButton();
+    }
+
+    // Update recirculation button text
+    function updateRecircButton() {
+      const btn = document.getElementById('recircButton');
+      if (sensors.recirculationActive) {
+        btn.textContent = 'Stop Recirculation';
+        btn.style.background = 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)';
+      } else {
+        btn.textContent = 'Start Recirculation';
+        btn.style.background = 'linear-gradient(135deg, #2ec4b6 0%, #1a9d8f 100%)';
+      }
+    }
+
+    // Show status message
+    function showStatus(message, type) {
+      const statusDiv = document.getElementById('statusMessage');
+      const colors = {
+        success: { bg: 'rgba(46, 196, 182, 0.2)', border: '#2ec4b6', text: '#2ec4b6' },
+        error: { bg: 'rgba(231, 76, 60, 0.2)', border: '#e74c3c', text: '#e74c3c' },
+        info: { bg: 'rgba(52, 152, 219, 0.2)', border: '#3498db', text: '#3498db' }
+      };
+      
+      const color = colors[type] || colors.info;
+      statusDiv.style.background = color.bg;
+      statusDiv.style.border = '1px solid ' + color.border;
+      statusDiv.style.color = color.text;
+      statusDiv.textContent = message;
+      statusDiv.style.display = 'block';
+
+      setTimeout(() => {
+        statusDiv.style.display = 'none';
+      }, 5000);
+    }
+
+    // Initialize controls on page load
+    window.addEventListener('load', () => {
+      updateRecircButton();
+    });
+
     // ═══════════════════════════════════════════════════════════════
     // 🔧 CONFIGURATION - UPDATE THESE WITH YOUR ACTUAL ENTITY IDs
     // ═══════════════════════════════════════════════════════════════
@@ -553,16 +823,30 @@
       document.getElementById('operationHours').textContent = (parseInt(data.operationHours) || 2156).toLocaleString();
       document.getElementById('fanCurrent').innerHTML = (parseInt(data.fanCurrent) || 150) + ' <span style="font-size: 0.8rem; color: #8b92a8;">mA</span>';
       document.getElementById('fanFrequency').innerHTML = (parseInt(data.fanFrequency) || 60) + ' <span style="font-size: 0.8rem; color: #8b92a8;">Hz</span>';
+      
+      // Update controls
+      updateRecircButton();
+      
+      // Update target temperature display if available
+      if (data.targetTemp) {
+        currentTargetTemp = parseInt(data.targetTemp);
+        document.getElementById('targetTempDisplay').textContent = currentTargetTemp;
+      }
     }
 
     // Check if running in Home Assistant
     function isHomeAssistant() {
       return window.hassConnection !== undefined || window.parent.hassConnection !== undefined;
     }
+    
+    // Get Home Assistant connection
+    function getHass() {
+      return window.hassConnection || window.parent.hassConnection;
+    }
 
     // Subscribe to Home Assistant state changes
     if (isHomeAssistant()) {
-      const hass = window.hassConnection || window.parent.hassConnection;
+      const hass = getHass();
       
       // Subscribe to all entities
       Object.values(ENTITY_MAP).forEach(entityId => {

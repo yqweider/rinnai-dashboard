@@ -1,6 +1,6 @@
 {
   "name": "Rinnai RU199iN Custom Dashboard",
-  "content_in_root": true,
+  "content_in_root": false,
   "filename": "rinnai-dashboard.html",
   "render_readme": true,
   "homeassistant": "2024.1.0"
