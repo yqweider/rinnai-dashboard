@@ -44,7 +44,7 @@ Fully responsive single-column layout optimized for phones and tablets.
 1. Open **HACS** in Home Assistant
 2. Click the **three dots** in the top right
 3. Select **Custom repositories**
-4. Add this repository URL: `https://github.com/YOUR_USERNAME/rinnai-dashboard`
+4. Add this repository URL: `https://github.com/yqweider/rinnai-dashboard`
 5. Category: **Lovelace**
 6. Click **Add**
 7. Click **Download** on the Rinnai Dashboard card
